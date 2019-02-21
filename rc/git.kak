@@ -2,7 +2,7 @@ define-command -docstring "Render git conflicted files" \
     git-show-conflicts %{ evaluate-commands %sh{
      output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git-conflicts.XXXXXXXX)/fifo
      mkfifo ${output}
-     ( git diff --diff-filter=U --unified=1 | grep -Po '^diff --cc \K.*|^@@@( -[0-9]+,[0-9]+){2} \+\K[0-9]+(?=(,[0-9]+)? )|^  \K.*' | head -n3 | sed -n 'p;2a 1' | paste -s -d":" - > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
+     ( git diff --diff-filter=U --unified=0 | grep -Po '^diff --cc \K.*|^@@@( -[0-9]+,[0-9]+){2} \+\K[0-9]+(?=(,[0-9]+)? )| @@@.*' | sed -e '0~3{s/ @@@[ ]\?//}' | sed '2~3 s/$/\n1/g' | sed "N;N;N;s/\n/:/g" > ${output} 2>&1 ) > /dev/null 2>&1 < /dev/null &
 
      printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} -scroll *conflicts*
